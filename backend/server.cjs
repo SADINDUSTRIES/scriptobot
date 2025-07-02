@@ -3,12 +3,21 @@ const multer = require('multer');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
-require('dotenv').config();
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Configure Multer
+// Serve frontend from ../frontend folder
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
+
+// Configure Multer for file uploads
 const upload = multer({ dest: 'backend/uploads/' });
 
 // Email Setup
@@ -20,7 +29,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Endpoint to receive the file
+// Handle PDF upload and send by email
 app.post('/upload', upload.single('pdfUpload'), (req, res) => {
   const filePath = req.file.path;
   const fileName = req.file.originalname;
@@ -39,7 +48,7 @@ app.post('/upload', upload.single('pdfUpload'), (req, res) => {
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
-    fs.unlinkSync(filePath);
+    fs.unlinkSync(filePath); // cleanup
     if (error) {
       console.error(error);
       return res.status(500).send('Email failed.');
