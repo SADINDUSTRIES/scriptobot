@@ -49,8 +49,15 @@ const transporter = nodemailer.createTransport({
 
 // Handle PDF upload and send by email
 app.post('/upload', upload.single('pdfUpload'), (req, res) => {
+  if (!req.file) {
+    console.error("❌ No file uploaded.");
+    return res.status(400).send('No file uploaded.');
+  }
+
   const filePath = req.file.path;
   const fileName = req.file.originalname;
+
+  console.log("📄 File received:", fileName);
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
@@ -68,13 +75,11 @@ app.post('/upload', upload.single('pdfUpload'), (req, res) => {
   transporter.sendMail(mailOptions, (error, info) => {
     fs.unlinkSync(filePath); // cleanup
     if (error) {
-      console.error(error);
-      return res.status(500).send('Email failed.');
+      console.error("❌ Email send error:", error);
+      return res.status(500).send('Email failed: ' + error.message);
     }
+
+    console.log("✅ Email sent from form:", info.response);
     res.status(200).send('Email sent successfully!');
   });
-});
-
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
 });
