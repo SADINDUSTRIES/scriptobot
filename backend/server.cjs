@@ -17,6 +17,24 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
+app.get('/test-email', (req, res) => {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_RECEIVER,
+    subject: 'Test Email from Scriptobot',
+    text: 'This is a test email to confirm setup.'
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error("❌ Email send error:", error);
+      return res.status(500).send(`Email failed: ${error.message}`);
+    }
+    res.status(200).send('✅ Test email sent!');
+  });
+});
+
+
 // Configure Multer for file uploads
 const upload = multer({ dest: 'backend/uploads/' });
 
